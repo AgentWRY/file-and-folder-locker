@@ -1,4 +1,4 @@
-:: Toggle Secret Files/Folders on Windows PC
+:: Hide and Lock Files and Folders on Windows PC
 ::
 :: hss.wiki
 ::
@@ -251,35 +251,20 @@ goto end
 
 :self_encrypt_and_destruct_if_flagged
 if defined zip_pw (
-    7z a "%zip_n%" "%script_filename_w_extension%" -p"%zip_pw%" > nul
-    echo Zipped the script into `%zip_n%` with password `%zip_pw%`.
-    echo.
-
-    @REM Self-delete
     if defined d (
         if defined v (
-            echo "MODE:D Self-Destruction Protocol Initiated."
-            echo Self-destruct the script in 10 seconds...
-            echo.
-            choice /t 10 /c 01 /d 0 /m "0 to proceed, 1 to interrupt."
-            if !ERRORLEVEL! == 2 (  @REM The 2nd choice, interrupt.
-            @REM Note the use of delayed expansion here. Otherwise would be 0.
-            @REM choice ref: https://stackoverflow.com/a/44999930/13451354
-                set "is_interrupted=_true"
-            )
+            echo "MODE:D Self-Destruction Protocol Initiated. Sayonara."
             echo.
         )
-        if defined is_interrupted (
-            if defined v echo Self-distruction interrupted.
-        ) else (
-            if defined v (
-                echo "Sayonara."
-                timeout 1 > nul
-            )
-            goto 2>nul & del "%~f0"
-            @REM Self-delete. Ref: https://stackoverflow.com/a/20333575
-        )
+        7z a "%zip_n%" "%script_filename_w_extension%" -p"%zip_pw%" -sdel > nul
+        @REM `-sdel` to delete files after compression.
+    ) else (
+        @REM Encrypt only. Leave one copy of the script outside.
+        7z a "%zip_n%" "%script_filename_w_extension%" -p"%zip_pw%" > nul
     )
+    echo Successfully locked the script into `%zip_n%` with password ^
+`%zip_pw%`.
+    echo.
 )
 
 :: ============================================================================
