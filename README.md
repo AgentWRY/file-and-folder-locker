@@ -20,7 +20,7 @@ Usage: Download the stand-alone batch script [`.toggle_secret_files.bat`](window
 
 ![Advanced usage](doc/batch_advanced_use.gif)
 
-Since this is my first batch script, I'm learning by doing alone all the way, and have left lots of comments in the code. Feel free to reduce the length of the script by removing the comments.
+Since this is my first batch script, I'm learning by doing along the way, and have left lots of comments in the script. Feel free to reduce the length of the script by removing the comments.
 
 ## Mac
 

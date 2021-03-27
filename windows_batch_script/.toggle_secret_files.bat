@@ -12,8 +12,8 @@
 :: folders, simply double click the script again.
 ::
 :: Intermediate usage: Set a passphrase under the "Config" section of this
-:: script. The files can be hided same as above, but revealing secret files
-:: will require the passphrase you just set.
+:: script. The files can be hid same as above, but revealing secret files will
+:: require the passphrase you just set.
 ::
 :: Advanced usage: Several flags can be specified in the filename of this
 :: script in order to lock this "key" script into a ZIP file. For example, if
@@ -34,27 +34,81 @@
 :: ############################################################################
 ::
 :: If the current folder contains any visible files/subfolders:
-::     Hide them all as secret files/folders.
-::     If -p<password> is flagged:
-::         Lock this script to a ZIP file encrypted with <password>.
-::         If -n<name> is flagged:
-::             Name the ZIP file as <name>.
-::         If -d is flagged for self-destruction:
-::             Self-delete the script, leaving only its encrypted ZIP file.
+::     Hide them all as secret files/folders. Note that this script will not be
+::     hid.
+::
+::     If `exe_password` is configured:
+::         Lock this script into an EXE file encrypted with the given password.
+::
+::         If `exe_filename` is configured:
+::             Name the EXE file as given.
+::
 :: Else:
-::     Reveal all hidden secret files/folders and turn them back to normal if
-::     script passphrase is disabled. Otherwise, check passphrase first.
-:: If -v is flagged for verbose:
-::     Print execution details and leave the console open.
+::     Reveal all secret files/folders in the current folder.
+::
+::     If `exe_remove_code` is configured:
+::         Remove the EXE file if possible.
+::
+::     If `script_passphrase` is configured:
+::         Request passphrase before revealing any secret files or folders.
+::
+:: If `v` is configured:
+::     Run the script in verbose mode.
 
 :: ############################################################################
 ::   Config
 :: ############################################################################
 
-set "script_passphrase=none"
-:: Replace `none` with your passphrase. For example, `set
-:: "script_passphrase=Alohomora"`. If configured, will request passphrase
-:: before revealing any secret files or folders.
+:: ============================================================================
+::   Request passphrase before revealing any secret files or folders
+:: ============================================================================
+
+set "script_passphrase="
+
+:: Add your passphrase after the equal sign. For example, `set
+:: "script_passphrase=Alohomora"`. To turn off passphrase verification, edit it
+:: back to `set "script_passphrase="`.
+
+:: ============================================================================
+::   Lock this script into an encrypted EXE file after hiding secret files
+:: ============================================================================
+
+set "exe_password="
+
+:: After the equal sign, add your password to encrypt the BAT script into an
+:: EXE. To keep the BAT script as is after hiding secret files, edit it back to
+:: `set "exe_password="`.
+
+:: ============================================================================
+::   Name the EXE file
+:: ============================================================================
+
+set "exe_filename=.toggle_secret_files.exe"
+
+:: By default, the EXE file is named as `.toggle_secret_files.exe`. Note that
+:: only when `exe_password` is defined, the BAT script will be locked into an
+:: encrypted EXE named as above, after hiding secret files. Setting only the
+:: EXE filename without password will not encrypt the BAT into EXE.
+
+:: ============================================================================
+::   Handle the EXE file after self-extracting
+:: ============================================================================
+
+:: TODO: update doc from here, also the header
+set "exe_remove_code=d"
+
+:: d to del, r to recycle,
+:: Toggle verbose mode
+
+:: ============================================================================
+::   Run the script in verbose mode
+:: ============================================================================
+
+set "v="
+
+:: Turn on to print logging messages to the console and leave the console open
+:: upon finish. For example, `set "v=_true"` will turn it on, and `set "v="`
+:: will turn it off.
 
 :: ############################################################################
 ::   Implementation
@@ -70,67 +124,33 @@ cls
 ::   Main
 :: ============================================================================
 
-:: - Parse flags
+:: - Validate configs
 :: - Catalog current files and folders
 :: - Toggle secret files and folders
-:: - After hiding secret files/folders, self encrypt and destruct if flagged
+:: - Lock the script into an encrypted ZIP if required
 :: - End
 
 :: ============================================================================
-::   Parse flags
+::   Validate configs
 :: ============================================================================
 
-set "filename_remaining_str=%~n0"
-:: `%~n0` stores current file name without extension.
-:: Ref: https://stackoverflow.com/a/15568171. Substitute 1 with 0.
+if "%exe_remove_code%" == "d" (
 
-:parse_next_flag
-:: `:label` for goto statements to jump to.
+) else if "%exe_remove_code%" == "r" (
 
-:: Split filename string by whitespaces.
-:: Ref: https://stackoverflow.com/a/19009701/13451354. Version 2.
-for /f "tokens=1*" %%a in ("%filename_remaining_str%") do (
-    set "flag_str=%%a"
-    set filename_remaining_str=%%b
 )
-:: `%%a` and `%%b` are local iterator vars.
 
-:: Note that if we access `flag_str`'s value within the loop, it can be off by
-:: one round of iteration. It's because delayed expansion is still disabled.
-:: See latter comments for details.
-
-set "flag_prefix=%flag_str:~0,2%"
-:: Substring slicing, starting from index 0 with length 2.
-
-if "%flag_prefix%" == "-n" (set "zip_n=%flag_str:-n=%") else ^
-if "%flag_prefix%" == "-p" (set "zip_pw=%flag_str:-p=%") else ^
-if "%flag_prefix%" == "-d" (set "d=_true") else ^
-if "%flag_prefix%" == "-v" (set "v=_true") else ^
-if "%flag_str:~0,1%" == "-" echo Unrecognized flag in filename: `%flag_str%`.
-:: `^` for line continuation.
-:: `"%flag_str:-n=%"`: the latter part works like RegEx. `=` is the match.
-if defined filename_remaining_str goto :parse_next_flag
-
-if not defined zip_pw (
-    if defined v echo Script will not be zipped since password is not flagged.
-) else (
-    if defined v echo Parsed ZIP password: `%zip_pw%`.
-    if defined zip_n (
-        if defined v echo Parsed ZIP filename: `%zip_n%`.
+if defined v (
+    if not defined exe_password (
+        echo Script will not be encrypted since EXE password is not defined.
     ) else (
-        set "zip_n=.toggle_secret_files.bat.zip"
-        setlocal enableDelayedExpansion
-        if defined v echo ZIP filename by default: `!zip_n!`.
-        setlocal disableDelayedExpansion
+        echo EXE password: `%exe_password%`.
+        echo EXE filename: `%exe_filename%`.
     )
+    echo.
 )
-if defined v echo.
 :: `echo:` or `echo.` to echo a blank line.
 
-:: `setlocal Enable/DisableDelayedExpansion`: enabling will introduce `!var!`
-:: syntax, which allows "re-evaluation" of var in runtime, but will slow down
-:: the script. If disabled, the value of the var won't change after the point
-:: of expansion/"evaluation".
 
 :: ============================================================================
 ::   Catalog current files and folders
@@ -154,6 +174,7 @@ for /f "tokens=1* delims=:" %%a in ('dir /ahs /b 2^>nul ^|findstr /n "^"') do (
         set "n_secret_files=!counter!"
     )
 )
+:: `%%a` and `%%b` are local iterator vars.
 
 :: Excluding this script and its possible ZIP since we don't want to turn them
 :: into secret files. Uses double quotes since filename can contain spaces.
@@ -201,7 +222,7 @@ if %n_files% gtr %n_secret_files% (
 ) else (
     if defined v echo Will reveal secret files and folders.
 
-    if "%script_passphrase%" == "none" (
+    if "%script_passphrase%" == "_none" (
         @REM Double-quote in case passphrase contains whitespaces.
         if defined v echo Script passphrase disabled.
         goto reveal_secret_files
@@ -225,12 +246,13 @@ if %n_files% gtr %n_secret_files% (
 )
 
 :hide_all_files
+:: `:label` for goto statements to jump to.
 for /l %%n in (1 1 %n_files%) do (
     attrib !file_number_%%n! +h +s
-    if defined v echo Hided `!file_number_%%n!`.
+    if defined v echo Hid `!file_number_%%n!`.
 )
 if defined v (
-    echo Successfully hided all %n_files% files and folders.
+    echo Successfully hid all %n_files% files and folders.
     echo.
 )
 goto self_encrypt_and_destruct_if_flagged
@@ -287,20 +309,23 @@ if defined v (
 
 :: TODO:
 ::
+:: - Move to PowerShell
+:: - Error handling. Keep the window open for error message.
 :: - Check if 7z is available from the command line. Catch errors.
 :: - Support special characters in zip password, filename, passphrase.
-:: - Error handling: if eponymous file exists as -n, zip and -d may fail. Keep
-::   the window open for error message.
 
 :: ============================================================================
 ::   Knowledge
 :: ============================================================================
 
+:: `^` for line continuation.
+
 :: Variable declaration
 
 :: It's recommended to wrap set commands with double quotes to avoid spaces.
 :: `set "a=1"` is the same as `set a=1`, but `set a="1"` is different. `set
-:: "var="` to undeclare var.
+:: "var="` to undeclare var. If `set "a=1"`, use `if "%a%" == "1"` to check.
+:: Note the double quotes.
 
 :: Comment styles
 
@@ -308,6 +333,18 @@ if defined v (
 :: label-style comments that start with :: won't influence the performance,
 :: they can't be used in-line or within parentheses.
 :: Ref: https://www.robvanderwoude.com/comments.php
+
+:: Delayed Expansion
+
+:: `setlocal Enable/DisableDelayedExpansion`: enabling will introduce `!var!`
+:: syntax, which allows "re-evaluation" of var in runtime, but will slow down
+:: the script. If disabled, the value of the var won't change after the point
+:: of expansion/"evaluation".
+
+:: Move to recycle bin
+
+:: echo (new-object -comobject Shell.Application).Namespace(0).ParseName("C:\fullpath\a.txt").InvokeVerb("delete") | powershell -command -
+:: Ref: https://superuser.com/a/1514767
 
 :: ============================================================================
 ::   Debugging snippets
