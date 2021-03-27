@@ -25,12 +25,9 @@
 ::
 :: The installation of [7-Zip](https://www.7-zip.org/) (about 1.4 MB) is
 :: required if want to zip and encrypt the script. See also the "Program logic"
-:: section below for other advanced usage.
-
-:: TODO:
-::
-:: - Update to use 7z -sdel switch to implement self-destruction feature.
-:: - Check if 7z is available from the command line. Catch errors.
+:: section below for other advanced usage. While script passphrase can contain
+:: whitespaces, flags in the filename of this script cannot. All of them are
+:: case sensitive, but none of them supports special characters yet.
 
 :: ############################################################################
 ::   Program logic
@@ -46,7 +43,7 @@
 ::             Self-delete the script, leaving only its encrypted ZIP file.
 :: Else:
 ::     Reveal all hidden secret files/folders and turn them back to normal if
-::     script passphrase is none. Otherwise, check passphrase first.
+::     script passphrase is disabled. Otherwise, check passphrase first.
 :: If -v is flagged for verbose:
 ::     Print execution details and leave the console open.
 
@@ -206,7 +203,7 @@ if %n_files% gtr %n_secret_files% (
 
     if "%script_passphrase%" == "none" (
         @REM Double-quote in case passphrase contains whitespaces.
-        if defined v echo Script passphrase not required.
+        if defined v echo Script passphrase disabled.
         goto reveal_secret_files
     ) else (
         if defined v echo Script passphrase required.
@@ -232,8 +229,10 @@ for /l %%n in (1 1 %n_files%) do (
     attrib !file_number_%%n! +h +s
     if defined v echo Hided `!file_number_%%n!`.
 )
-echo Successfully hided all %n_files% files and folders.
-echo.
+if defined v (
+    echo Successfully hided all %n_files% files and folders.
+    echo.
+)
 goto self_encrypt_and_destruct_if_flagged
 
 :reveal_secret_files
@@ -241,8 +240,10 @@ for /l %%n in (1 1 %n_secret_files%) do (
     attrib !secret_file_number_%%n! -h -s
     if defined v echo Revealed `!secret_file_number_%%n!`.
 )
-echo Successfully revealed all %n_secret_files% secret files and folders.
-echo.
+if defined v (
+    echo Successfully revealed all %n_secret_files% secret files and folders.
+    echo.
+)
 goto end
 
 :: ============================================================================
@@ -257,14 +258,16 @@ if defined zip_pw (
             echo.
         )
         7z a "%zip_n%" "%script_filename_w_extension%" -p"%zip_pw%" -sdel > nul
-        @REM `-sdel` to delete files after compression.
+        @REM `-sdel` to self delete files after compression.
     ) else (
         @REM Encrypt only. Leave one copy of the script outside.
         7z a "%zip_n%" "%script_filename_w_extension%" -p"%zip_pw%" > nul
     )
-    echo Successfully locked the script into `%zip_n%` with password ^
+    if defined v (
+        echo Successfully locked the script into `%zip_n%` with password ^
 `%zip_pw%`.
-    echo.
+        echo.
+    )
 )
 
 :: ============================================================================
@@ -274,16 +277,24 @@ if defined zip_pw (
 :end
 
 if defined v (
-    cmd /k  @REM Keep the CMD window open.
-) else (
-    echo This window will close in 5 seconds...
-    timeout 5 > nul
+    cmd /k
 )
-:: Timeout ref: https://stackoverflow.com/a/42598287
+:: Keep the CMD window open.
 
 :: ############################################################################
 ::   Coding notes
 :: ############################################################################
+
+:: TODO:
+::
+:: - Check if 7z is available from the command line. Catch errors.
+:: - Support special characters in zip password, filename, passphrase.
+:: - Error handling: if eponymous file exists as -n, zip and -d may fail. Keep
+::   the window open for error message.
+
+:: ============================================================================
+::   Knowledge
+:: ============================================================================
 
 :: Variable declaration
 
@@ -298,7 +309,9 @@ if defined v (
 :: they can't be used in-line or within parentheses.
 :: Ref: https://www.robvanderwoude.com/comments.php
 
-:: Debugging snippets
+:: ============================================================================
+::   Debugging snippets
+:: ============================================================================
 
 @REM set "debug_filename=.toggle_secret_files -v -d -ppw -nname -extra"
 @REM set "v="  @REM undeclare

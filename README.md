@@ -1,3 +1,27 @@
-# Hide and Lock Files and Folders on Windows PC
+# Hide and Lock Files and Folders
 
-Double-click [`.toggle_secret_files.bat`](windows_batch_script/.toggle_secret_files.bat) to hide all files and folders under the same folder with the script. Double click again to un-hide. Simple and easy. See its header for details and other usages.
+## Windows
+
+Usage: Download the stand-alone batch script [`.toggle_secret_files.bat`](windows_batch_script/.toggle_secret_files.bat) and put it where you want to hide files and folders. See its header for details.
+
+### Functionality overview
+
+![Functionality overview](doc/batch_overview.gif)
+
+### Basic usage
+
+![Basic usage ](doc/batch_basic_use.gif)
+
+### Intermediate usage
+
+![Intermediate usage ](doc/batch_intermediate_use.gif)
+
+### Advanced usage
+
+![Advanced usage](doc/batch_advanced_use.gif)
+
+Since this is my first batch script, I'm learning by doing alone all the way, and have left lots of comments in the code. Feel free to reduce the length of the script by removing the comments.
+
+## Mac
+
+TBD
