@@ -9,13 +9,15 @@
 :: Basic usage: Put this BAT file into the folder that you want to hide its
 :: files and subfolders. Double click the script to hide the files. Refresh if
 :: needed to see the effect. To reveal those files and folders, simply double
-:: click the script again.
+:: click the script again. Or, without risking to reveal the folder, you can
+:: directly access the secret folder by typing its address in Win+R, or use
+:: `explorer <folder_address>` command in CMD.
 ::
 :: Intermediate usage: Set a passphrase under the "Config" section of this
 :: script, and it will be asked before revealing any secret files. The files
 :: can be hidden same as above.
 ::
-:: Advanced usage: Set a EXE password under the "Config" section, and the
+:: Advanced usage: Set an EXE password under the "Config" section, and the
 :: script will be locked into a self-extracting EXE after hiding files and
 :: folders. To reveal the files, first, double click the EXE and enter the
 :: password to release the BAT script. Then, double click the script to reveal
@@ -113,7 +115,7 @@ cls
 :: - Validate configs
 :: - Catalog current files and folders
 :: - Toggle secret files and folders
-:: - Lock the script into an encrypted ZIP if required
+:: - Lock the script into an encrypted EXE if required
 :: - End
 
 :: ============================================================================
@@ -305,10 +307,18 @@ if defined v (
 
 :: TODO:
 ::
-:: - Move to PowerShell
+:: - Move to PowerShell or Python, whichever works better with Mac.
+:: - Set exe_filename_w_extension to be the same with BAT filename as default
 :: - Error handling. Keep the window open for error message.
 :: - Check if 7z is available from the command line. Catch errors.
-:: - Support space and special chars in zip password, filename, passphrase.
+:: - Support space and special chars in exe password, filename, passphrase.
+:: - Disguise folder with Control Panel GUIDs?
+::   - List of GUIDs:
+::     https://docs.microsoft.com/en-us/windows/win32/shell/controlpanel-canonical-names
+::   - To avoid showing file and folder names in CMD, recursively rename them
+::     as GUIDs and encrypt the look-up table with 7z. When unhid, change back
+::     file and folder names.
+::   - All Control Panel tools: {ED7BA470-8E54-465E-825C-99712043E01C}
 
 :: ============================================================================
 ::   Knowledge
